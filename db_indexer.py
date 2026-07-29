@@ -40,7 +40,7 @@ class DynamicDatabaseIndexer:
     def __init__(self, db_path: Path = config.DB_PATH, api_key: Optional[str] = None):
         self.db_path = Path(db_path)
         self.api_key = api_key or config.MISTRAL_API_KEY
-        self.client = Mistral(api_key=self.api_key) if self.api_key else None
+        self.client = config.get_mistral_client(api_key=self.api_key) if self.api_key else None
         self.index_data: List[Dict[str, Any]] = []
 
     def _get_connection(self):

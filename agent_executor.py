@@ -43,11 +43,12 @@ def execute_local_tool(tool_call) -> str:
 class PureAgentExecutor:
     """Modular Execution Brick for Mistral AI Studio Agents."""
 
-    def __init__(self, api_key: str = None):
+    def __init__(self, api_key: str = None, server_url: str = None):
         self.api_key = api_key or config.MISTRAL_API_KEY
+        self.server_url = server_url or config.MISTRAL_SERVER_URL
         if not self.api_key:
             raise ValueError("MISTRAL_API_KEY is missing. Required for Agent API execution.")
-        self.client = Mistral(api_key=self.api_key)
+        self.client = config.get_mistral_client(api_key=self.api_key, server_url=self.server_url)
 
     def _call_agent_with_retry(self, agent_id: str, messages: list, max_retries: int = 4):
         """Calls client.agents.complete with exponential backoff on HTTP 429 Rate Limits."""

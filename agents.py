@@ -34,7 +34,7 @@ class MistralDirectAPI:
 
     def __init__(self, api_key: str = None):
         self.api_key = api_key or config.MISTRAL_API_KEY
-        self.client = Mistral(api_key=self.api_key) if self.api_key else None
+        self.client = config.get_mistral_client(api_key=self.api_key) if self.api_key else None
         self.connector = SQLiteSIConnector()
 
     # ── Structured Outputs via client.chat.parse ─────────────────────────

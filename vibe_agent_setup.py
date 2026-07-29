@@ -47,7 +47,7 @@ def setup_vibe_agent(api_key: Optional[str] = None) -> Dict[str, Any]:
         print("⚠️ MISTRAL_API_KEY absente dans le fichier .env")
         return {}
 
-    client = Mistral(api_key=key)
+    client = config.get_mistral_client(api_key=key)
 
     if not DB_PATH.exists():
         print(f"❌ Base de données introuvable à {DB_PATH}")

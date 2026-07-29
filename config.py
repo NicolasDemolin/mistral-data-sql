@@ -30,6 +30,17 @@ if str(SDK_SRC) not in sys.path:
 # ── Mistral AI Settings ──────────────────────────────────────────────────
 MISTRAL_API_KEY = os.environ.get("MISTRAL_API_KEY", "")
 MISTRAL_AGENT_ID = os.environ.get("MISTRAL_AGENT_ID", "")
+MISTRAL_SERVER_URL = os.environ.get("MISTRAL_SERVER_URL", os.environ.get("MISTRAL_ENDPOINT_URL", None))
+
+def get_mistral_client(api_key: Optional[str] = None, server_url: Optional[str] = None):
+    """Factory helper to instantiate a Mistral client with optional custom server URL endpoint."""
+    from mistralai.client import Mistral
+    key = api_key or MISTRAL_API_KEY
+    url = server_url or MISTRAL_SERVER_URL
+    kwargs = {"api_key": key}
+    if url:
+        kwargs["server_url"] = url
+    return Mistral(**kwargs)
 
 # Models available on AI Studio
 MODEL_LARGE = os.environ.get("MISTRAL_MODEL_LARGE", "mistral-large-latest")

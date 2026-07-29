@@ -120,7 +120,7 @@ class AIStudioAgentRegistry:
         self.api_key = api_key or config.MISTRAL_API_KEY
         if not self.api_key:
             raise ValueError("MISTRAL_API_KEY obligatoire pour la gestion des agents AI Studio.")
-        self.client = Mistral(api_key=self.api_key)
+        self.client = config.get_mistral_client(api_key=self.api_key)
 
     def register_or_get_agent(self) -> Dict[str, Any]:
         """
@@ -143,7 +143,7 @@ def register_agent(api_key: str = None) -> str:
         print("⚠️ MISTRAL_API_KEY absente. Définissez MISTRAL_API_KEY dans votre fichier .env")
         return ""
 
-    client = Mistral(api_key=key)
+    client = config.get_mistral_client(api_key=key)
 
     try:
         agent = client.beta.agents.create(

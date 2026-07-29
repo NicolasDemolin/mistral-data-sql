@@ -35,7 +35,7 @@ class UniversalTextToDataWorkflow:
 
     def __init__(self, connector: Optional[SIConnector] = None, api_key: Optional[str] = None):
         self.api_key = api_key or config.MISTRAL_API_KEY
-        self.client = Mistral(api_key=self.api_key) if self.api_key else None
+        self.client = config.get_mistral_client(api_key=self.api_key) if self.api_key else None
         self.connector = connector or SQLiteSIConnector()
         self.specialist = DPMSchemaSpecialist()
 
