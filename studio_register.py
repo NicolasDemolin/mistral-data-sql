@@ -116,11 +116,12 @@ Ne jamais halluciner de chiffre ni de code réglementaire. Utilise exclusivement
 class AIStudioAgentRegistry:
     """Manages AI Studio persistent Agent registration and updates."""
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, server_url: Optional[str] = None):
         self.api_key = api_key or config.MISTRAL_API_KEY
+        self.server_url = server_url or config.MISTRAL_SERVER_URL
         if not self.api_key:
             raise ValueError("MISTRAL_API_KEY obligatoire pour la gestion des agents AI Studio.")
-        self.client = config.get_mistral_client(api_key=self.api_key)
+        self.client = config.get_mistral_client(api_key=self.api_key, server_url=self.server_url)
 
     def register_or_get_agent(self) -> Dict[str, Any]:
         """
@@ -136,14 +137,15 @@ class AIStudioAgentRegistry:
         return {"agent_id": agent.id, "name": agent.name, "model": agent.model}
 
 
-def register_agent(api_key: str = None) -> str:
+def register_agent(api_key: str = None, server_url: str = None) -> str:
     """CLI / Function helper to register the Agent on AI Studio."""
     key = api_key or config.MISTRAL_API_KEY
+    url = server_url or config.MISTRAL_SERVER_URL
     if not key:
         print("⚠️ MISTRAL_API_KEY absente. Définissez MISTRAL_API_KEY dans votre fichier .env")
         return ""
 
-    client = config.get_mistral_client(api_key=key)
+    client = config.get_mistral_client(api_key=key, server_url=url)
 
     try:
         agent = client.beta.agents.create(
@@ -157,6 +159,8 @@ def register_agent(api_key: str = None) -> str:
         print(f"   Agent ID   : {agent.id}")
         print(f"   Nom        : {agent.name}")
         print(f"   Modèle     : {agent.model}")
+        if url:
+            print(f"   Server URL : {url}")
         print(f"   Outils     : {len(TOOLS_DECLARATIONS)} fonctions déclarées\n")
         print(f"💡 N'importe quel utilisateur Vibe Coding ou client SDK peut maintenant appeler :")
         print(f"   client.agents.complete(agent_id='{agent.id}', messages=[...])\n")

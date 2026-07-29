@@ -26,6 +26,8 @@ def print_banner():
     print(f"  SDK: client-python | beta.agents + RunContext + register_func + MCP")
     if config.MISTRAL_API_KEY:
         print(f"  Mode : Live AI Studio (MISTRAL_API_KEY configurée)")
+        if config.MISTRAL_SERVER_URL:
+            print(f"  Server URL           : {config.MISTRAL_SERVER_URL}")
         if config.MISTRAL_AGENT_ID:
             print(f"  Agent ID enregistré : {config.MISTRAL_AGENT_ID}")
     else:
@@ -127,15 +129,19 @@ def main():
     parser.add_argument("--serve", "-s", action="store_true", help="Lancer le serveur Web")
     parser.add_argument("--demo", "-d", action="store_true", help="Exécuter les requêtes de démonstration")
     parser.add_argument("--register-agent", action="store_true", help="Enregistrer l'agent persistant sur AI Studio")
+    parser.add_argument("--server-url", type=str, default=None, help="URL du serveur Mistral personnalisé (ex: https://api.mistral.ai)")
     parser.add_argument("--vibe-agent", action="store_true", help="Créer un agent natif Mistral Vibe (Le Chat) avec Code Interpreter")
     parser.add_argument("--mcp", action="store_true", help="Lancer le serveur MCP (Model Context Protocol) pour Vibe Coding")
     parser.add_argument("--port", type=int, default=8000, help="Port du serveur (défaut: 8000)")
     args = parser.parse_args()
 
+    if args.server_url:
+        config.MISTRAL_SERVER_URL = args.server_url.strip()
+
     if args.vibe_agent:
         setup_vibe_agent()
     elif args.register_agent:
-        register_agent()
+        register_agent(server_url=args.server_url)
     elif args.mcp:
         run_mcp()
     elif args.query:
