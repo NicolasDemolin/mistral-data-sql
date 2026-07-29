@@ -33,7 +33,12 @@ from typing import Optional
 MISTRAL_API_KEY = os.environ.get("MISTRAL_API_KEY", "").strip()
 MISTRAL_AGENT_ID = os.environ.get("MISTRAL_AGENT_ID", "").strip()
 
-_raw_url = os.environ.get("MISTRAL_SERVER_URL", os.environ.get("MISTRAL_ENDPOINT_URL", "")).strip()
+_raw_url = (
+    os.environ.get("MISTRAL_SERVER_URL") or 
+    os.environ.get("MISTRAL_ENDPOINT_URL") or 
+    os.environ.get("MISTRAL_BASE_URL") or 
+    os.environ.get("MISTRAL_URL", "")
+).strip()
 MISTRAL_SERVER_URL = _raw_url if _raw_url else None
 
 def get_mistral_client(api_key: Optional[str] = None, server_url: Optional[str] = None):
