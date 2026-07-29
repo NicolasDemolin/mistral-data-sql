@@ -27,16 +27,21 @@ SDK_SRC = BASE_DIR / "client-python" / "src"
 if str(SDK_SRC) not in sys.path:
     sys.path.insert(0, str(SDK_SRC))
 
+from typing import Optional
+
 # ── Mistral AI Settings ──────────────────────────────────────────────────
-MISTRAL_API_KEY = os.environ.get("MISTRAL_API_KEY", "")
-MISTRAL_AGENT_ID = os.environ.get("MISTRAL_AGENT_ID", "")
-MISTRAL_SERVER_URL = os.environ.get("MISTRAL_SERVER_URL", os.environ.get("MISTRAL_ENDPOINT_URL", None))
+MISTRAL_API_KEY = os.environ.get("MISTRAL_API_KEY", "").strip()
+MISTRAL_AGENT_ID = os.environ.get("MISTRAL_AGENT_ID", "").strip()
+
+_raw_url = os.environ.get("MISTRAL_SERVER_URL", os.environ.get("MISTRAL_ENDPOINT_URL", "")).strip()
+MISTRAL_SERVER_URL = _raw_url if _raw_url else None
 
 def get_mistral_client(api_key: Optional[str] = None, server_url: Optional[str] = None):
     """Factory helper to instantiate a Mistral client with optional custom server URL endpoint."""
     from mistralai.client import Mistral
-    key = api_key or MISTRAL_API_KEY
-    url = server_url or MISTRAL_SERVER_URL
+    key = (api_key or MISTRAL_API_KEY).strip() if (api_key or MISTRAL_API_KEY) else ""
+    url = (server_url or MISTRAL_SERVER_URL or "").strip()
+    
     kwargs = {"api_key": key}
     if url:
         kwargs["server_url"] = url
