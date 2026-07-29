@@ -1,0 +1,234 @@
+{
+  "entities": [
+    {
+      "id": 1,
+      "lei_code": "969500A242M0A8951963",
+      "name": "AXA SA",
+      "short_code": "AXA",
+      "country": "FR",
+      "sector": "Insurance Group"
+    },
+    {
+      "id": 2,
+      "lei_code": "969500A453G92150963",
+      "name": "AXA FRANCE VIE",
+      "short_code": "AXA_VIE",
+      "country": "FR",
+      "sector": "Life Insurance"
+    },
+    {
+      "id": 3,
+      "lei_code": "529900560FKA8EATDM85",
+      "name": "ALLIANZ SE",
+      "short_code": "ALLIANZ",
+      "country": "DE",
+      "sector": "Insurance Group"
+    },
+    {
+      "id": 4,
+      "lei_code": "549300T5WLHXQV231454",
+      "name": "GENERALI ASSICURAZIONI",
+      "short_code": "GENERALI",
+      "country": "IT",
+      "sector": "Insurance Group"
+    }
+  ],
+  "s2301_own_funds": [
+    {
+      "id": 1,
+      "entity_id": 1,
+      "period": "2023-Q4",
+      "tier1_unrestricted": 44800000000.0,
+      "tier1_restricted": 2150000000.0,
+      "tier2": 5200000000.0,
+      "tier3": 300000000.0,
+      "total_eligible_own_funds_scr": 52450000000.0,
+      "total_eligible_own_funds_mcr": 46950000000.0,
+      "scr_amount": 23100000000.0,
+      "mcr_amount": 10400000000.0,
+      "solvency_ratio_pct": 227.06,
+      "currency": "EUR"
+    },
+    {
+      "id": 2,
+      "entity_id": 1,
+      "period": "2022-Q4",
+      "tier1_unrestricted": 42100000000.0,
+      "tier1_restricted": 2000000000.0,
+      "tier2": 4900000000.0,
+      "tier3": 250000000.0,
+      "total_eligible_own_funds_scr": 49250000000.0,
+      "total_eligible_own_funds_mcr": 44100000000.0,
+      "scr_amount": 22900000000.0,
+      "mcr_amount": 10200000000.0,
+      "solvency_ratio_pct": 215.07,
+      "currency": "EUR"
+    },
+    {
+      "id": 3,
+      "entity_id": 2,
+      "period": "2023-Q4",
+      "tier1_unrestricted": 18500000000.0,
+      "tier1_restricted": 900000000.0,
+      "tier2": 2100000000.0,
+      "tier3": 100000000.0,
+      "total_eligible_own_funds_scr": 21600000000.0,
+      "total_eligible_own_funds_mcr": 19400000000.0,
+      "scr_amount": 9800000000.0,
+      "mcr_amount": 4400000000.0,
+      "solvency_ratio_pct": 220.41,
+      "currency": "EUR"
+    },
+    {
+      "id": 4,
+      "entity_id": 3,
+      "period": "2023-Q4",
+      "tier1_unrestricted": 51200000000.0,
+      "tier1_restricted": 2800000000.0,
+      "tier2": 6100000000.0,
+      "tier3": 400000000.0,
+      "total_eligible_own_funds_scr": 60500000000.0,
+      "total_eligible_own_funds_mcr": 54000000000.0,
+      "scr_amount": 26400000000.0,
+      "mcr_amount": 11800000000.0,
+      "solvency_ratio_pct": 229.16,
+      "currency": "EUR"
+    }
+  ],
+  "s0201_balance_sheet": [
+    {
+      "id": 1,
+      "entity_id": 1,
+      "period": "2023-Q4",
+      "total_assets": 680500000000.0,
+      "investments_financial": 510000000000.0,
+      "cash_and_equivalents": 25000000000.0,
+      "technical_provisions": 575000000000.0,
+      "total_liabilities": 628050000000.0,
+      "excess_assets_over_liabilities": 52450000000.0,
+      "currency": "EUR"
+    },
+    {
+      "id": 2,
+      "entity_id": 3,
+      "period": "2023-Q4",
+      "total_assets": 720000000000.0,
+      "investments_financial": 540000000000.0,
+      "cash_and_equivalents": 31000000000.0,
+      "technical_provisions": 610000000000.0,
+      "total_liabilities": 659500000000.0,
+      "excess_assets_over_liabilities": 60500000000.0,
+      "currency": "EUR"
+    }
+  ],
+  "data_dictionary": [
+    {
+      "id": 1,
+      "table_name": "s2301_own_funds",
+      "column_name": "total_eligible_own_funds_scr",
+      "qrt_table_code": "S.23.01.01",
+      "qrt_row_code": "R0010",
+      "qrt_col_code": "C0010",
+      "concept_fr": "Montant des fonds propres éligibles pour couvrir le SCR",
+      "concept_en": "Total eligible own funds to meet the SCR",
+      "unit": "EUR",
+      "description": "Fonds propres prudentiels totaux selon Solvabilité II"
+    },
+    {
+      "id": 2,
+      "table_name": "s2301_own_funds",
+      "column_name": "tier1_unrestricted",
+      "qrt_table_code": "S.23.01.01",
+      "qrt_row_code": "R0040",
+      "qrt_col_code": "C0010",
+      "concept_fr": "Fonds propres Tier 1 non restreints",
+      "concept_en": "Tier 1 unrestricted own funds",
+      "unit": "EUR",
+      "description": "Capital de haute qualité sans contrainte d absorption des pertes"
+    },
+    {
+      "id": 3,
+      "table_name": "s2301_own_funds",
+      "column_name": "tier1_restricted",
+      "qrt_table_code": "S.23.01.01",
+      "qrt_row_code": "R0050",
+      "qrt_col_code": "C0010",
+      "concept_fr": "Fonds propres Tier 1 restreints",
+      "concept_en": "Tier 1 restricted own funds",
+      "unit": "EUR",
+      "description": "Instruments subordonnés Tier 1 restreints"
+    },
+    {
+      "id": 4,
+      "table_name": "s2301_own_funds",
+      "column_name": "tier2",
+      "qrt_table_code": "S.23.01.01",
+      "qrt_row_code": "R0070",
+      "qrt_col_code": "C0010",
+      "concept_fr": "Fonds propres Tier 2",
+      "concept_en": "Tier 2 own funds",
+      "unit": "EUR",
+      "description": "Titres subordonnés et dettes subordonnées Tier 2"
+    },
+    {
+      "id": 5,
+      "table_name": "s2301_own_funds",
+      "column_name": "tier3",
+      "qrt_table_code": "S.23.01.01",
+      "qrt_row_code": "R0090",
+      "qrt_col_code": "C0010",
+      "concept_fr": "Fonds propres Tier 3",
+      "concept_en": "Tier 3 own funds",
+      "unit": "EUR",
+      "description": "Créances fiscales différées nettes éligibles"
+    },
+    {
+      "id": 6,
+      "table_name": "s2301_own_funds",
+      "column_name": "scr_amount",
+      "qrt_table_code": "S.23.01.01",
+      "qrt_row_code": "R0580",
+      "qrt_col_code": "C0010",
+      "concept_fr": "Capital Requis de Solvabilité (SCR)",
+      "concept_en": "Solvency Capital Requirement",
+      "unit": "EUR",
+      "description": "Exigence de capital globale Solvabilité II"
+    },
+    {
+      "id": 7,
+      "table_name": "s2301_own_funds",
+      "column_name": "solvency_ratio_pct",
+      "qrt_table_code": "S.23.01.01",
+      "qrt_row_code": "R0620",
+      "qrt_col_code": "C0010",
+      "concept_fr": "Ratio de Solvabilité II",
+      "concept_en": "Solvency II ratio",
+      "unit": "%",
+      "description": "Ratio Fonds Propres Eligibles / SCR"
+    },
+    {
+      "id": 8,
+      "table_name": "s0201_balance_sheet",
+      "column_name": "total_assets",
+      "qrt_table_code": "S.02.01.01",
+      "qrt_row_code": "R0500",
+      "qrt_col_code": "C0010",
+      "concept_fr": "Total de l'actif",
+      "concept_en": "Total assets",
+      "unit": "EUR",
+      "description": "Total Bilan Prudentiel Actif"
+    },
+    {
+      "id": 9,
+      "table_name": "s0201_balance_sheet",
+      "column_name": "excess_assets_over_liabilities",
+      "qrt_table_code": "S.02.01.01",
+      "qrt_row_code": "R0300",
+      "qrt_col_code": "C0010",
+      "concept_fr": "Excédent de l'actif sur le passif",
+      "concept_en": "Excess of assets over liabilities",
+      "unit": "EUR",
+      "description": "Valeur nette d entreprise selon Solvabilité II"
+    }
+  ]
+}
