@@ -83,7 +83,24 @@ def get_entity_info(entity_name: str) -> str:
 
 
 if __name__ == "__main__":
+    import uvicorn
+    from starlette.middleware.cors import CORSMiddleware
+
+    port = int(os.environ.get("MCP_PORT", "8080"))
     transport = os.environ.get("MCP_TRANSPORT", "sse")
-    print(f"🚀 Starting MCP Server (transport={transport}, port={os.environ.get('MCP_PORT', '8080')})")
+
+    print(f"🚀 Starting Remote MCP Server (transport={transport}, port={port})")
     print(f"📦 Database: {config.DB_PATH}")
-    mcp.run(transport=transport)
+
+    if transport == "sse":
+        app = mcp.sse_app()
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+        uvicorn.run(app, host="0.0.0.0", port=port)
+    else:
+        mcp.run(transport=transport)
