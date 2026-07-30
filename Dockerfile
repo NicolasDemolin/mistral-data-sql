@@ -27,6 +27,8 @@ COPY server.py .
 COPY main.py .
 COPY studio_register.py .
 COPY vibe_agent_setup.py .
+COPY mistral_studio_workflow.py .
+COPY worker.py .
 
 # Copy the DPM database
 COPY DPM_lite.db .

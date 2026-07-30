@@ -35,3 +35,16 @@ services:
   #     - MISTRAL_AGENT_ID=${MISTRAL_AGENT_ID}
   #     - MISTRAL_SERVER_URL=${MISTRAL_SERVER_URL}
   #   restart: unless-stopped
+
+  # Workflow Worker — connects to Mistral control plane
+  workflow-worker:
+    build: .
+    container_name: acpr-workflow-worker
+    command: ["python", "worker.py"]
+    environment:
+      - DATABASE_PATH=DPM_lite.db
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - MISTRAL_SERVER_URL=${MISTRAL_SERVER_URL:-}
+    restart: unless-stopped
+    depends_on:
+      - mcp-server
