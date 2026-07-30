@@ -1,13 +1,3 @@
-# ── Build Stage ──────────────────────────────────────────────────────────
-FROM python:3.12-slim AS builder
-
-WORKDIR /build
-
-# Install dependencies first (cache layer)
-COPY requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
-
-# ── Runtime Stage ────────────────────────────────────────────────────────
 FROM python:3.12-slim
 
 LABEL maintainer="NicolasDemolin"
@@ -15,8 +5,9 @@ LABEL description="ACPR DPM MCP Server — Solvency II Text-to-Data"
 
 WORKDIR /app
 
-# Copy installed packages from builder
-COPY --from=builder /install /usr/local
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY config.py .
