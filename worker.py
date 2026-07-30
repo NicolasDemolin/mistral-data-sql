@@ -19,9 +19,21 @@ import sys
 # Ensure DATABASE_PATH is set before any config import
 os.environ.setdefault("DATABASE_PATH", "DPM_lite.db")
 
+# ── Custom Mistral Server URL (Enterprise / Dedicated / Proxy) ──
+# We load the .env to catch MISTRAL_SERVER_URL if it's set
+from dotenv import load_dotenv
+load_dotenv()
+
+custom_url = os.environ.get("MISTRAL_SERVER_URL", "").strip()
+if custom_url:
+    # 1. Configurer l'URL pour le SDK Mistral Workflows (le worker)
+    os.environ["MISTRAL_WORKFLOWS_WORKER_SERVER_URL"] = custom_url
+    # 2. Configurer l'URL pour les appels LLM internes du SDK Workflows
+    os.environ["MISTRAL_WORKFLOWS_WORKER_AGENT__MISTRAL_CLIENT_SERVER_URL"] = custom_url
 
 async def main():
     import mistralai.workflows as workflows
+
 
     # Import the workflow class so it gets registered via the decorator
     from mistral_studio_workflow import ACPRTextToDataWorkflow  # noqa: F401
