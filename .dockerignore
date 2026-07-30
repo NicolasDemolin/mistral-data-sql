@@ -1,0 +1,8 @@
+.git
+.gitignore
+__pycache__
+*.pyc
+.env
+.env.example
+acpr_data.json
+acpr_reporting.db

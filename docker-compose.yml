@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  mcp-server:
+    build: .
+    container_name: acpr-mcp-server
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_PATH=DPM_lite.db
+      - MCP_PORT=8080
+      - MCP_TRANSPORT=sse
+      # Optionnel : si vous avez besoin de l'API Mistral depuis le container
+      # - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      # - MISTRAL_SERVER_URL=${MISTRAL_SERVER_URL}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8080/sse', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Optionnel : le serveur API REST (Agent Executor)
+  # Décommenter si vous voulez aussi exposer l'API agent
+  # api-server:
+  #   build: .
+  #   container_name: acpr-api-server
+  #   command: ["python", "server.py"]
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - DATABASE_PATH=DPM_lite.db
+  #     - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+  #     - MISTRAL_AGENT_ID=${MISTRAL_AGENT_ID}
+  #     - MISTRAL_SERVER_URL=${MISTRAL_SERVER_URL}
+  #   restart: unless-stopped
