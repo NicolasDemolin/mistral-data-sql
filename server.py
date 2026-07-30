@@ -44,6 +44,26 @@ def ask_agent_endpoint(req: AgentQueryRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+class WorkflowQueryRequest(BaseModel):
+    query: str
+
+@app.post("/api/workflow/ask")
+def ask_workflow_endpoint(req: WorkflowQueryRequest):
+    """
+    Endpoint for the deterministic Workflow approach.
+    Takes a query, discovers schema, generates SQL via Codestral, and returns data.
+    """
+    if not req.query.strip():
+        raise HTTPException(status_code=400, detail="La requête ne peut pas être vide.")
+        
+    try:
+        from mistral_workflow import UniversalTextToDataWorkflow
+        workflow = UniversalTextToDataWorkflow()
+        result = workflow.run(req.query)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=False)
