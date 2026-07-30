@@ -5,9 +5,11 @@ LABEL description="ACPR DPM MCP Server — Solvency II Text-to-Data"
 
 WORKDIR /app
 
-# Install dependencies
+# Install dependencies and verify mcp.server.fastmcp is available
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    python -c "from mcp.server.fastmcp import FastMCP; print('✅ mcp.server.fastmcp OK')" && \
+    pip show mcp | head -3
 
 # Copy application code
 COPY config.py .
