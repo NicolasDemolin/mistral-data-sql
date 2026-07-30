@@ -38,9 +38,6 @@ COPY vibe_agent_setup.py .
 # Copy the DPM database
 COPY DPM_lite.db .
 
-# Copy the client-python SDK
-COPY client-python/ ./client-python/
-
 # Copy schema index if available
 COPY .schema_index.json* ./
 
