@@ -1,15 +1,5 @@
 """
-ACPR Text-to-Data — Mistral AI Studio Workflow.
-
-This module defines a durable Workflow using the `mistralai-workflows` SDK.
-It is orchestrated by the Mistral control plane and executed by a worker
-running on your own infrastructure (DigitalOcean Droplet).
-
-Pipeline:
-  1. discover_schema  — Scan DPM_lite.db + DPMSchemaSpecialist semantic search
-  2. generate_sql     — Call Codestral to produce exact SQL SELECT
-  3. execute_query    — Run the SQL on DPM_lite.db (with auto-correction retry)
-  4. synthesize       — Format structured JSON response with QRT coordinates
+Workflow activities (pure functions) for the Text-to-Data pipeline.
 """
 
 import os
@@ -17,62 +7,21 @@ import json
 import re
 from typing import Optional
 from datetime import timedelta
-
 import mistralai.workflows as workflows
-from pydantic import BaseModel
 
-# ── Pydantic I/O Models ─────────────────────────────────────────────────
-
-class TextToDataInput(BaseModel):
-    """Input schema for the workflow."""
-    query: str
-
-
-class SchemaDiscoveryResult(BaseModel):
-    """Output of the schema discovery activity."""
-    all_tables: list[str]
-    schemas: dict
-    dpm_specialist_info: Optional[dict] = None
-
-
-class SQLGenerationResult(BaseModel):
-    """Output of the SQL generation activity."""
-    sql_query: str
-
-
-class QueryExecutionResult(BaseModel):
-    """Output of the query execution activity."""
-    sql_query: str
-    columns: list[str]
-    rows: list[list]  # list of rows as lists (JSON-serializable)
-
-
-class TextToDataOutput(BaseModel):
-    """Final structured output of the workflow."""
-    original_query: str
-    entity_name: str
-    concept: str
-    value: float
-    formatted_value: str
-    currency: str
-    period: str
-    lei_code: str
-    qrt_table: str
-    qrt_row: str
-    qrt_col: str
-    sql_query: str
-    reasoning: str
-    confidence: float
-    rows_data: list[dict]
-    audit_trail: list[str]
-
-
-# ── Activities ───────────────────────────────────────────────────────────
+from .models import (
+    TextToDataInput,
+    SchemaDiscoveryResult,
+    SQLGenerationResult,
+    QueryExecutionResult,
+    EvaluationResult,
+    TextToDataOutput,
+)
 
 @workflows.activity(start_to_close_timeout=timedelta(seconds=30))
 async def discover_schema(input: TextToDataInput) -> SchemaDiscoveryResult:
     """
-    Activity 1: Discover database schema and perform semantic DPM lookup.
+    Activity 1: Discover database schema and perform semantic lookup.
     Side-effects: reads DPM_lite.db, calls mistral-embed for vector search.
     """
     os.environ.setdefault("DATABASE_PATH", "DPM_lite.db")
@@ -108,8 +57,8 @@ async def discover_schema(input: TextToDataInput) -> SchemaDiscoveryResult:
 @workflows.activity(start_to_close_timeout=timedelta(seconds=60))
 async def generate_sql(query: str, schema_info: dict, previous_error: Optional[str] = None) -> SQLGenerationResult:
     """
-    Activity 2: Use Codestral to generate an exact SQL SELECT query.
-    Side-effects: calls Mistral Codestral API.
+    Activity 2: Use an LLM to generate an exact SQL SELECT query.
+    Side-effects: calls Mistral API.
     """
     os.environ.setdefault("DATABASE_PATH", "DPM_lite.db")
     import config  # noqa: E402
@@ -117,13 +66,12 @@ async def generate_sql(query: str, schema_info: dict, previous_error: Optional[s
     client = config.get_mistral_client()
 
     system_prompt = (
-        "Tu es un expert SQL Codestral universel. Ta mission est de générer une requête SQL SELECT brute "
+        "Tu es un expert SQL universel. Ta mission est de générer une requête SQL SELECT brute "
         "pour répondre à la question de l'utilisateur d'après la structure de la base ci-jointe.\n\n"
         "Règles d'or SQL :\n"
         "1. Ne mets AUCUN commentaire (pas de -- ni de /* */) ni d'explication textuelle. Renvoie SEULEMENT le code SQL SELECT pur.\n"
-        "2. Gère la traduction FR/EN si la base est en anglais (ex: 'fonds propres' = 'own funds' / 'S.23.01', 'bilan' = 'balance sheet').\n"
-        "3. Si la base est un modèle DPM (dpmTable, dpmTableCell), fais les JOIN nécessaires.\n"
-        "4. Limite les résultats (`LIMIT 10`).\n\n"
+        "2. Fais les JOIN nécessaires en te basant logiquement sur les clés primaires/étrangères du schéma.\n"
+        "3. Limite les résultats (`LIMIT 10`).\n\n"
         f"Structure des tables de la base :\n{json.dumps(schema_info.get('schemas', {}), indent=2, ensure_ascii=False)}\n\n"
     )
 
@@ -157,8 +105,8 @@ async def generate_sql(query: str, schema_info: dict, previous_error: Optional[s
 @workflows.activity(start_to_close_timeout=timedelta(seconds=15))
 async def execute_query(sql_query: str) -> QueryExecutionResult:
     """
-    Activity 3: Execute a read-only SQL SELECT on DPM_lite.db.
-    Side-effects: reads DPM_lite.db.
+    Activity 3: Execute a read-only SQL SELECT on the database.
+    Side-effects: reads DB.
     """
     os.environ.setdefault("DATABASE_PATH", "DPM_lite.db")
     import config  # noqa: E402
@@ -176,6 +124,65 @@ async def execute_query(sql_query: str) -> QueryExecutionResult:
     )
 
 
+@workflows.activity(start_to_close_timeout=timedelta(seconds=60))
+async def evaluate_result(query: str, sql_query: str, columns: list[str], rows: list[list]) -> EvaluationResult:
+    """
+    Activity 3.5: Evaluate if the SQL and the returned data actually answer the user's query.
+    Pure evaluation using LLM.
+    """
+    import config  # noqa: E402
+    
+    client = config.get_mistral_client()
+    # Use MODEL_CHAT if available, otherwise fallback to standard chat model
+    model_name = getattr(config, "MODEL_CHAT", "mistral-large-latest")
+
+    system_prompt = (
+        "Tu es un juge de données (Data Judge). Ta mission est d'évaluer si une requête SQL "
+        "et les résultats qu'elle a renvoyés répondent correctement à la question initiale de l'utilisateur.\n"
+        "Tu dois renvoyer UNIQUEMENT un objet JSON avec la structure exacte suivante :\n"
+        "{\n"
+        '  "reasoning": "Explication détaillée de pourquoi la requête et les résultats sont corrects ou incorrects",\n'
+        '  "is_correct": true ou false,\n'
+        '  "confidence_score": un nombre entre 0.0 et 1.0\n'
+        "}\n"
+    )
+
+    data_preview = [dict(zip(columns, r)) for r in rows[:5]] if rows else []
+
+    user_prompt = (
+        f"Question originale : '{query}'\n"
+        f"Requête SQL exécutée : \n{sql_query}\n"
+        f"Résultats obtenus (aperçu) : {json.dumps(data_preview, ensure_ascii=False)}\n\n"
+        "Évalue ces résultats selon la consigne et retourne le JSON."
+    )
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
+
+    response = client.chat.complete(
+        model=model_name,
+        messages=messages,
+        response_format={"type": "json_object"},
+        temperature=0.0,
+    )
+
+    try:
+        content = json.loads(response.choices[0].message.content)
+        return EvaluationResult(
+            reasoning=content.get("reasoning", "Pas de raisonnement fourni."),
+            is_correct=bool(content.get("is_correct", False)),
+            confidence_score=float(content.get("confidence_score", 0.0))
+        )
+    except Exception as e:
+        return EvaluationResult(
+            reasoning=f"Erreur d'évaluation : {str(e)}",
+            is_correct=False,
+            confidence_score=0.0
+        )
+
+
 @workflows.activity(start_to_close_timeout=timedelta(seconds=10))
 async def synthesize_result(
     query: str,
@@ -183,9 +190,10 @@ async def synthesize_result(
     columns: list[str],
     rows: list[list],
     dpm_specialist_info: Optional[dict],
+    evaluation: EvaluationResult,
 ) -> TextToDataOutput:
     """
-    Activity 4: Synthesize the final structured response with QRT coordinates.
+    Activity 4: Synthesize the final structured response.
     Pure computation, no side-effects.
     """
     audit_trail = [
@@ -214,8 +222,8 @@ async def synthesize_result(
             qrt_row=qrt_r,
             qrt_col=qrt_c,
             sql_query=sql_query,
-            reasoning=f"0 résultat trouvé pour '{query}'",
-            confidence=0.0,
+            reasoning=evaluation.reasoning,
+            confidence=evaluation.confidence_score,
             rows_data=[],
             audit_trail=audit_trail,
         )
@@ -293,75 +301,8 @@ async def synthesize_result(
         qrt_row=qrt_row,
         qrt_col=qrt_col,
         sql_query=sql_query,
-        reasoning=f"Workflow DPM : '{query}' → {qrt_table}/{qrt_row}/{qrt_col}",
-        confidence=1.0 if rows else 0.0,
+        reasoning=evaluation.reasoning,
+        confidence=evaluation.confidence_score,
         rows_data=[dict(zip(columns, r)) for r in rows[:5]],
         audit_trail=audit_trail,
     )
-
-
-# ── Workflow ─────────────────────────────────────────────────────────────
-
-@workflows.workflow.define(
-    name="acpr-text-to-data",
-    workflow_display_name="ACPR Text-to-Data",
-    workflow_description=(
-        "Pipeline déterministe Text-to-Data pour la taxonomie Solvabilité II (EIOPA DPM). "
-        "Découvre le schéma, génère le SQL via Codestral, exécute la requête, "
-        "et retourne les coordonnées QRT précises."
-    ),
-)
-class ACPRTextToDataWorkflow:
-    """
-    Durable Workflow orchestrating 4 activities:
-    discover_schema → generate_sql → execute_query → synthesize_result
-    """
-
-    @workflows.workflow.entrypoint
-    async def run(self, input: TextToDataInput) -> TextToDataOutput:
-        # Step 1: Discover schema + DPM specialist semantic search
-        schema_result = await discover_schema(input)
-
-        # Step 2: Generate SQL via Codestral
-        schema_dict = schema_result.model_dump()
-        sql_result = await generate_sql(
-            query=input.query,
-            schema_info=schema_dict,
-        )
-
-        # Step 3: Execute query with auto-correction (up to 2 retries)
-        max_retries = 2
-        query_result = None
-        previous_error = None
-
-        for attempt in range(max_retries + 1):
-            try:
-                if attempt > 0:
-                    # Re-generate SQL with the error context
-                    sql_result = await generate_sql(
-                        query=input.query,
-                        schema_info=schema_dict,
-                        previous_error=previous_error,
-                    )
-                query_result = await execute_query(sql_query=sql_result.sql_query)
-                break  # Success
-            except Exception as e:
-                previous_error = str(e)
-                if attempt == max_retries:
-                    # Final failure: return empty result
-                    query_result = QueryExecutionResult(
-                        sql_query=sql_result.sql_query,
-                        columns=[],
-                        rows=[],
-                    )
-
-        # Step 4: Synthesize final structured response
-        result = await synthesize_result(
-            query=input.query,
-            sql_query=query_result.sql_query,
-            columns=query_result.columns,
-            rows=query_result.rows,
-            dpm_specialist_info=schema_result.dpm_specialist_info,
-        )
-
-        return result

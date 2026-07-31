@@ -36,7 +36,7 @@ async def main():
 
 
     # Import the workflow class so it gets registered via the decorator
-    from mistral_studio_workflow import ACPRTextToDataWorkflow  # noqa: F401
+    from workflow import ACPRTextToDataWorkflow  # noqa: F401
 
     print("🚀 Starting ACPR Text-to-Data Workflow Worker...")
     print(f"📦 Database: {os.environ.get('DATABASE_PATH', 'DPM_lite.db')}")
